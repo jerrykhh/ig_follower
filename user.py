@@ -3,12 +3,36 @@ from datetime import datetime
 
 class User:
 
-    def __init__(self, username, password, user_agent):
+    def __init__(self, username=None, password=None, user_agent=None):
         self.__username = username
         self.__password = password
         self.__user_agent = user_agent
-        self.__csrftoken = self.__getLoginTOKEN()
+        if self.checkInputDataIsNotNone():
+            self.__csrftoken = self.__getLoginTOKEN()
+        else:
+            self.__csrftoken = None
         self.__loggined = False
+
+    def getUsername(self):
+        return self.__username
+
+    def getPassword(self):
+        return self.__password
+
+    def getUserAgent(self):
+        return self.__user_agent
+
+    def setUsername(self, username=None):
+        self.__username = username
+
+    def setPassword(self, password=None):
+        self.__password = password
+
+    def setUserAgent(self, user_agent=None):
+        self.__user_agent = user_agent
+
+    def checkInputDataIsNotNone(self):
+        return self.__username is not None and self.__password is not None and self.__user_agent is not None
 
     def __getLoginTOKEN(self):
         response = requests.get('https://www.instagram.com/accounts/login/', headers={'User-agent': self.__user_agent})
@@ -26,6 +50,9 @@ class User:
         }
 
     def login(self):
+        if self.__csrftoken is None:
+            self.__csrftoken = self.__getLoginTOKEN()
+
         if not self.__loggined:
             time = int(datetime.now().timestamp())
             response = requests.post("https://www.instagram.com/accounts/login/ajax/", data={
