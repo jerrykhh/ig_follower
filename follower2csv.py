@@ -1,10 +1,12 @@
 import requests, json, csv
+from command import Command
 
-class Follower2CSV:
+
+class Follower2CSV(Command):
 
     def __init__(self, target_user, trigger_user):
+        super().__init__(trigger_user)
         self.__target_user = target_user
-        self.__trigger_user = trigger_user
         self.__save_count = 0
         self.__query_hash = input("Please input the query_hash: ")
 
@@ -24,8 +26,8 @@ class Follower2CSV:
 
         has_next_page = True
         count_request = 1
-        while(has_next_page):
-            response = requests.get(f'https://www.instagram.com/graphql/query/?query_hash={self.__query_hash}&variables={json.dumps(variables)}', headers=self.__trigger_user.getAccessAPICookies())
+        while has_next_page :
+            response = requests.get(f'https://www.instagram.com/graphql/query/?query_hash={self.__query_hash}&variables={json.dumps(variables)}', headers=self.getTriggerUser().getAccessAPICookies())
             jsonData = json.loads(response.text)
             print(jsonData)
             edge = jsonData["data"]["user"]["edge_followed_by"]
@@ -34,7 +36,7 @@ class Follower2CSV:
             print(f"Request {count_request}:", len(users), "found")
             for userNode in users:
                 user = userNode["node"]
-                #user["biography"] = self.getUserBiography(user["username"], self.__trigger_user)
+                #user["biography"] = self.getUserBiography(user["username"], self.getTriggerUser())
                 del user["reel"]
                 self.__save2CSV(user)
 
@@ -45,7 +47,7 @@ class Follower2CSV:
                 next_page_cursor = edge["page_info"]["end_cursor"]
                 variables["after"] = next_page_cursor
 
-        print(f'Finish: save {self.__save_count - 1} rows')
+        print(f'Finish: save {self.__save_count} rows')
 
     def __save2CSV(self, user):
         try:

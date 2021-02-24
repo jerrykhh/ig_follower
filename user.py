@@ -41,12 +41,15 @@ class User:
         return token
 
     def getAccessAPICookies(self):
-
         if not self.__loggined:
             raise ValueError("User not login")
         return {
             "User-Agent": self.__user_agent,
             "Cookie": f"sessionid={self.__sessionId};csrftoken={self.__csrftoken}",
+            "x-csrftoken": self.__csrftoken,
+            "content-type": "application/x-www-form-urlencoded",
+            "x-instagram-ajax": "9ad59a145017"
+
         }
 
     def login(self):

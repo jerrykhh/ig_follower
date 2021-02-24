@@ -1,6 +1,7 @@
 from user import User
 import getpass
 
+
 class Login:
 
     def __init__(self, args=None):

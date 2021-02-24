@@ -1,4 +1,6 @@
-import requests, json, csv
+import json
+import requests
+
 
 class TargetUser:
 
@@ -14,7 +16,8 @@ class TargetUser:
         self.__target_username = input("Please enter your target username: ")
 
     def __getUserInf(self):
-        response = requests.get(f'https://www.instagram.com/{self.__target_username}/?__a=1', headers=self.__trigger_user.getAccessAPICookies())
+        response = requests.get(f'https://www.instagram.com/{self.__target_username}/?__a=1',
+                                headers=self.__trigger_user.getAccessAPICookies())
         return json.loads(response.text)["graphql"]["user"]
 
     def getUserId(self):
@@ -22,4 +25,3 @@ class TargetUser:
 
     def getUsername(self):
         return self.__target_username
-
