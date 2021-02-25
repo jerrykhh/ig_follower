@@ -3,7 +3,6 @@ import json
 import requests
 import time
 from datetime import datetime
-
 from CSV2Following_config import CSV2FollowingConfig
 from command import Command
 from file_manager import FileManager
@@ -23,16 +22,37 @@ class CSV2Following(Command):
             for row in csv_reader:
                 if self.__line_count == 0:
                     print(f'CSV: column names are {", ".join(row)}')
-                response = requests.post(f"https://www.instagram.com/web/friendships/${row['id']}/follow/",
-                                         headers=self.getTriggerUser().getAccessAPICookies())
-                jsonData = json.loads(response.text)
-                now = datetime.now()
-                if jsonData["result"] == "requested":
-                    print(f'CSV2Following: requested {row["username"]}({row["id"]}) at {now}')
-                elif jsonData["result"] == "following":
-                    print(f'CSV2Following: following {row["username"]}({row["id"]}) at {now}')
-                else:
-                    print(f'CSV2Following: Error {row["username"]}({row["id"]}) at {now}')
-                self.__line_count += 1
+                try:
+                    response = requests.post(f"https://www.instagram.com/web/friendships/{row['id']}/follow/",
+                                             headers=self.getTriggerUser().getAccessAPICookies())
+                    jsonData = json.loads(response.text)
+                    now = datetime.now()
+                    if jsonData["result"] == "requested":
+                        print(f'CSV2Following: requested {row["username"]}({row["id"]}) at {now}')
+                    elif jsonData["result"] == "following":
+                        print(f'CSV2Following: following {row["username"]}({row["id"]}) at {now}')
+                    else:
+                        print(f'CSV2Following: Error {row["username"]}({row["id"]}) at {now}')
+                    self.__line_count += 1
+                except:
+                    time.sleep(400)
                 time.sleep(self.__config.getConfig()["time"])
             print(f'Processed {self.__line_count} lines.')
+
+    @staticmethod
+    def fitting(file_path):
+        ordered_dict_list = []
+        with open(file_path, mode="r", encoding='utf-8-sig') as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            total_row_count = 0
+            total_followed_count = 0
+            for row in csv_reader:
+                if row["followed_by_viewer"] == 'True' or row["requested_by_viewer"] == 'True':
+                    total_followed_count += 1
+                else:
+                    ordered_dict_list.append(row)
+                total_row_count += 1
+
+            FileManager.save_csv_file(ordered_dict_list, "fitting-" + file_path)
+            print(f"CSV2Following(CSV: {file_path}): {total_row_count} rows found, {total_followed_count} rows is "
+                  f"followed or requested")
