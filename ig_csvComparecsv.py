@@ -2,6 +2,7 @@ import sys
 import csv
 from datetime import datetime
 from CSVidenComparer import CSVidenComparer
+from CSVDiffComparer import CSVDiffComparer
 
 len_args = len(sys.argv) - 1
 
@@ -17,4 +18,9 @@ if len_args == 0:
         else:
             file_paths.append(file_path)
 
-    CSVidenComparer(file_paths).compare()
+else:
+    for index in range(1, len_args):
+        file_paths.append(sys.argv[index])
+
+CSVDiffComparer(file_paths).compare()
+#CSVidenComparer(file_paths).compare()
