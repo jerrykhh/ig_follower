@@ -24,7 +24,6 @@ class CSV2Following(Command):
                 if self.__line_count == 0:
                     print(f'CSV: column names are {", ".join(row)}')
                 try:
-
                     response = requests.post(f"https://www.instagram.com/web/friendships/{row['id']}/follow/",
                                              headers=self.getTriggerUser().getAccessAPICookies())
                     jsonData = json.loads(response.text)
@@ -40,6 +39,11 @@ class CSV2Following(Command):
                 except:
                     time.sleep(600)
                     print("Request Error: Due to the server request blocked, it will sleep 10min")
+                    try:
+                        self.getTriggerUser().restartSession()
+                    except:
+                        print("Session Restart Failed, the program will End")
+                        exit()
                 time.sleep(self.__config.getConfig()["time"])
             print(f'Processed {self.__line_count} lines.')
 

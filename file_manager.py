@@ -1,4 +1,5 @@
 import csv
+from os import path
 from datetime import datetime
 
 class FileManager:
@@ -11,6 +12,11 @@ class FileManager:
 
     def getFilePath(self):
         return self.__file_path
+
+    @staticmethod
+    def file_exist(filePath):
+        return path.exists(filePath)
+
 
     @staticmethod
     def save_csv_file(ordered_dict_list, file_path=None):

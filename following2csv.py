@@ -1,7 +1,9 @@
 import requests
 import json
 import csv
+import sys
 from command import Command
+from file_manager import FileManager
 
 class Following2CSV(Command):
 
@@ -15,8 +17,8 @@ class Following2CSV(Command):
         self.__following2JSON()
 
     def __following2JSON(self):
-        if self.__query_hash is None:
-            raise ValueError("Missing the query hash")
+        if self.__query_hash is None or self.__query_hash == "":
+            self.__query_hash = "3dec7e2c57367ef3da3d987d89f9dbc8"
 
         variables = {
             "id": self.__target_user.getUserId(),
@@ -58,6 +60,10 @@ class Following2CSV(Command):
             with open(f'{self.__target_user.getUsername()}-following-{self.__query_hash}.csv', 'a+', encoding='utf-8-sig') as csvfile:
                 writer = csv.DictWriter(csvfile, user.keys())
                 if self.__save_count == 0:
+                    if FileManager.file_exist(f'{self.__target_user.getUsername()}-following-{self.__query_hash}.csv'):
+                        user_input = input("The file is exits, you want to override it? (YES/no)")
+                        if user_input == "no":
+                            sys.exit()
                     writer.writeheader()
                     writer.writerow(user)
                 else:

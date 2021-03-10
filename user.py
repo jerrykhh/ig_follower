@@ -49,8 +49,15 @@ class User:
             "x-csrftoken": self.__csrftoken,
             "content-type": "application/x-www-form-urlencoded",
             "x-instagram-ajax": "9ad59a145017"
-
         }
+
+    def restartSession(self):
+        if self.__loggined is True:
+            self.__loggined = False
+            self.__csrftoken = None
+            self.login()
+        else:
+            self.login()
 
     def login(self):
         if self.__csrftoken is None:

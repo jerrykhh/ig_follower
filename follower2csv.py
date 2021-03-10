@@ -14,8 +14,8 @@ class Follower2CSV(Command):
         self.__follower2JSON()
 
     def __follower2JSON(self):
-        if self.__query_hash is None:
-            raise ValueError("Missing the query hash")
+        if self.__query_hash is None or self.__query_hash == "":
+            self.__query_hash = "5aefa9893005572d237da5068082d8d5"
 
         variables = {
             "id": self.__target_user.getUserId(),
