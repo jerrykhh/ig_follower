@@ -2,6 +2,7 @@ import requests
 import json
 import csv
 import sys
+import os
 from command import Command
 from file_manager import FileManager
 
@@ -57,13 +58,18 @@ class Following2CSV(Command):
 
     def __save2CSV(self, user):
         try:
-            with open(f'{self.__target_user.getUsername()}-following-{self.__query_hash}.csv', 'a+', encoding='utf-8-sig') as csvfile:
+            output_file_name = f'{self.__target_user.getUsername()}-following-{self.__query_hash}.csv'
+            if self.__save_count == 0:
+                if FileManager.file_exist(output_file_name):
+                    user_input = input("The file is exits, you want to override it? (YES/no)")
+                    if user_input == "no":
+                        sys.exit()
+                    elif user_input == "YES":
+                        os.remove(output_file_name)
+
+            with open(output_file_name, 'a+', encoding='utf-8-sig') as csvfile:
                 writer = csv.DictWriter(csvfile, user.keys())
                 if self.__save_count == 0:
-                    if FileManager.file_exist(f'{self.__target_user.getUsername()}-following-{self.__query_hash}.csv'):
-                        user_input = input("The file is exits, you want to override it? (YES/no)")
-                        if user_input == "no":
-                            sys.exit()
                     writer.writeheader()
                     writer.writerow(user)
                 else:

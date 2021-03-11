@@ -37,8 +37,9 @@ class CSV2Following(Command):
                     self.__line_count += 1
                     response.close()
                 except:
-                    time.sleep(600)
                     print("Request Error: Due to the server request blocked, it will sleep 10min")
+                    time.sleep(600)
+                    print("Login again.")
                     try:
                         self.getTriggerUser().restartSession()
                     except:
@@ -55,7 +56,7 @@ class CSV2Following(Command):
             total_row_count = 0
             total_followed_count = 0
             for row in csv_reader:
-                if row["followed_by_viewer"] == 'True' or row["requested_by_viewer"] == 'True':
+                if row["followed_by_viewer"].lower() == 'true' or row["requested_by_viewer"].lower() == 'true':
                     total_followed_count += 1
                 else:
                     ordered_dict_list.append(row)

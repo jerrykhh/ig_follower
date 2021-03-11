@@ -42,7 +42,7 @@ class FileManager:
     @staticmethod
     def write_csv_header(order_dict, file_path, ):
         with open(file_path, mode='w+', encoding='utf-8-sig') as csv_file:
-            writer = csv.DictWriter(csv_file)
+            writer = csv.DictWriter(csv_file, order_dict.keys())
             writer.writeheader()
             csv_file.close()
 
