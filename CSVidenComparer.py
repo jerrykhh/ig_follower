@@ -46,3 +46,11 @@ class CSVidenComparer(CSVComparer):
                             duplicate_orderddict.append(pre_csv_row)
                             break
         return duplicate_orderddict
+
+    @staticmethod
+    def compareOrderedList(pre_ordered_list, post_ordered_list):
+        result = [];
+        for ordered_dict in post_ordered_list:
+            if ordered_dict in pre_ordered_list:
+                result.append(ordered_dict)
+        return result;
