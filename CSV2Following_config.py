@@ -9,5 +9,6 @@ class CSV2FollowingConfig:
 
     def getConfig(self):
         return {
-            "time": self.__time
+            "time": self.__time,
+            "error_count": 10
         }

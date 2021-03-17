@@ -20,6 +20,7 @@ class CSV2Following(Command):
     def follow(self):
         with open(self.__file_manager.getFilePath(), mode="r", encoding='utf-8-sig') as csv_file:
             csv_reader = csv.DictReader(csv_file)
+            error_count = 0
             for row in csv_reader:
                 if self.__line_count == 0:
                     print(f'CSV: column names are {", ".join(row)}')
@@ -37,14 +38,22 @@ class CSV2Following(Command):
                     self.__line_count += 1
                     response.close()
                 except:
-                    print("Request Error: Due to the server request blocked, it will sleep 10min")
-                    time.sleep(600)
-                    print("Login again.")
-                    try:
-                        self.getTriggerUser().restartSession()
-                    except:
-                        print("Session Restart Failed, the program will End")
+                    error_count += 1
+                    if error_count == self.__config.getConfig()["error_count"]:
+                        print(f"Failed {error_count} times, it will sleep 3 hours")
+                        time.sleep(60*60*3)
+                    elif error_count == self.__config.getConfig()["error_count"]+1:
+                        print("Program end: Due to the server request blocked")
                         exit()
+                    else:
+                        print("Request Error: Due to the server request blocked, it will sleep 10min")
+                        time.sleep(600)
+                        print("Login again.")
+                        try:
+                            self.getTriggerUser().restartSession()
+                        except:
+                            print("Session Restart Failed, the program will End")
+                            exit()
                 time.sleep(self.__config.getConfig()["time"])
             print(f'Processed {self.__line_count} lines.')
 
