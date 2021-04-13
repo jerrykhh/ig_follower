@@ -29,15 +29,18 @@ class CSV2Following(Command):
                                              headers=self.getTriggerUser().getAccessAPICookies())
                     jsonData = json.loads(response.text)
                     now = datetime.now()
-                    if jsonData["spam"] == True or jsonData["spam"] == "True" :
-                        print("Error: Instagram blocked your account follow function. Program will end.")
-                        exit()
+
                     if jsonData["result"] == "requested":
                         print(f'CSV2Following: requested {row["username"]}({row["id"]}) at {now}')
                     elif jsonData["result"] == "following":
                         print(f'CSV2Following: following {row["username"]}({row["id"]}) at {now}')
                     else:
                         print(f'CSV2Following: Error {row["username"]}({row["id"]}) at {now}')
+
+                    if ("spam" in jsonData) and (jsonData["spam"] == True or jsonData["spam"] == "True"):
+                        print("Error: Instagram blocked your account follow function. Program will end.")
+                        exit()
+
                     self.__line_count += 1
                     response.close()
                 except:
