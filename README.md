@@ -4,6 +4,12 @@
 - Compare the CSV File (Different/ identical rows)
 - Follow user automatically (follow the CSV file)
 
+### Installation (Follower/ Following to csv)
+```
+git clone https://github.com/jerrykhh/ig_follower.git
+pip install requests
+```
+
 ### Usage (Follower/ Following to csv)
 ```
 python ig_follower2csv.py

@@ -14,4 +14,5 @@ else:
 
 login_panel.login()
 trigger_user = login_panel.getUser()
-Follower2CSV(TargetUser(trigger_user), trigger_user).save()
+while(True):
+    Follower2CSV(TargetUser(trigger_user), trigger_user).save()

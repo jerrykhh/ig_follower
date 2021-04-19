@@ -1,6 +1,6 @@
 import json
 import requests
-
+from sys import exit
 
 class TargetUser:
 
@@ -13,7 +13,10 @@ class TargetUser:
         self.__userInf = self.__getUserInf()
 
     def setTargetUsername(self):
+        print("if you need to end the program, please input the EXIT or Ctrl+C")
         self.__target_username = input("Please enter your target username: ")
+        if self.__target_username == "EXIT":
+            exit()
 
     def __getUserInf(self):
         response = requests.get(f'https://www.instagram.com/{self.__target_username}/?__a=1',

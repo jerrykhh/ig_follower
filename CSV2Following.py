@@ -2,6 +2,7 @@ import csv
 import json
 import requests
 import time
+import random
 from datetime import datetime
 from CSV2Following_config import CSV2FollowingConfig
 from command import Command
@@ -37,30 +38,31 @@ class CSV2Following(Command):
                     else:
                         print(f'CSV2Following: Error {row["username"]}({row["id"]}) at {now}')
 
-                    if ("spam" in jsonData) and (jsonData["spam"] == True or jsonData["spam"] == "True"):
-                        print("Error: Instagram blocked your account follow function. Program will end.")
-                        exit()
-
                     self.__line_count += 1
                     response.close()
                 except:
                     error_count += 1
-                    if error_count == self.__config.getConfig()["error_count"]:
-                        print(f"Failed {error_count} times, it will sleep 3 hours")
-                        time.sleep(60*60*3)
-                    elif error_count == self.__config.getConfig()["error_count"]+1:
-                        print("Program end: Due to the server request blocked")
-                        exit()
-                    else:
-                        print("Request Error: Due to the server request blocked, it will sleep 10min")
-                        time.sleep(600)
-                        print("Login again.")
-                        try:
-                            self.getTriggerUser().restartSession()
-                        except:
-                            print("Session Restart Failed, the program will End")
+                    try:
+                        if jsonData["spam"] is True or jsonData["spam"] == "True":
+                            print("Error: Instagram blocked your account follow function. Program will end.")
                             exit()
-                time.sleep(self.__config.getConfig()["time"])
+                    except:
+                        if error_count == self.__config.getConfig()["error_count"]:
+                            print(f"Failed {error_count} times, it will sleep 3 hours")
+                            time.sleep(60*60*3)
+                        elif error_count == self.__config.getConfig()["error_count"]+1:
+                            print("Program end: Due to the server request blocked")
+                            exit()
+                        else:
+                            print("Request Error: Due to the server request blocked, it will sleep 10min")
+                            time.sleep(600)
+                            print("Login again.")
+                            try:
+                                self.getTriggerUser().restartSession()
+                            except:
+                                print("Session Restart Failed, the program will End")
+                                exit()
+                time.sleep(self.__config.getConfig()["time"] + random.uniform(0.0, 10.0))
             print(f'Processed {self.__line_count} lines.')
 
     @staticmethod
