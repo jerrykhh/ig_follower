@@ -1,4 +1,5 @@
 import sys
+import time
 from login import Login
 from target_user import TargetUser
 from follower2csv import Follower2CSV
@@ -15,4 +16,8 @@ else:
 login_panel.login()
 trigger_user = login_panel.getUser()
 while(True):
-    Follower2CSV(TargetUser(trigger_user), trigger_user).save()
+    target_user = TargetUser(trigger_user)
+    Follower2CSV(target_user, trigger_user).save()
+    print("break 5 sec, due to avoid to ban account")
+    del target_user
+    time.sleep(5)
