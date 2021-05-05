@@ -25,13 +25,32 @@ class FileManager:
         if file_path is None:
             file_path = f"result-fitting{int(datetime.now().timestamp())}"
         save_count = 0
-        with open(file_path, mode="w+", encoding='utf-8-sig') as csv_file:
+        with open(file_path, mode="w+", newline='', encoding='utf-8-sig') as csv_file:
             writer = FileManager.save_csv_header(csv_file, ordered_dict_list[0])
             for row in ordered_dict_list:
                 writer.writerow(row)
                 save_count += 1
             csv_file.close()
             print(f"FileManager: {save_count} rows saved, {file_path}")
+
+    @staticmethod
+    def reponse_save_csv_file(data, file_path=None):
+        if len(data) == 0:
+            print("No any data need save")
+        if file_path is None:
+            file_path = input("Please input the filePath")
+
+        save_count  = 0
+        with open(file_path, mode="w+", newline='', encoding='utf-8-sig') as csv_file:
+            writer = csv.DictWriter(csv_file, data[0].keys())
+            writer.writeheader()
+            for row in data:
+                writer.writerow(row)
+                save_count += 1
+            csv_file.close()
+            print(f"FileManager: {save_count} rows saved, {file_path}")
+
+
 
     @staticmethod
     def save_csv_header(csv_file, order_dict):

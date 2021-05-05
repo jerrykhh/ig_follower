@@ -1,5 +1,6 @@
 import requests, json, csv
 from command import Command
+from file_manager import FileManager
 
 
 class Follower2CSV(Command):
@@ -26,6 +27,8 @@ class Follower2CSV(Command):
 
         has_next_page = True
         count_request = 1
+        userRecords = []
+
         while has_next_page :
             response = requests.get(f'https://www.instagram.com/graphql/query/?query_hash={self.__query_hash}&variables={json.dumps(variables)}', headers=self.getTriggerUser().getAccessAPICookies())
             jsonData = json.loads(response.text)
@@ -38,7 +41,7 @@ class Follower2CSV(Command):
                 user = userNode["node"]
                 #user["biography"] = self.getUserBiography(user["username"], self.getTriggerUser())
                 del user["reel"]
-                self.__save2CSV(user)
+                userRecords.append(user)
 
             count_request += 1
             has_next_page = edge["page_info"]["has_next_page"]
@@ -47,20 +50,7 @@ class Follower2CSV(Command):
                 next_page_cursor = edge["page_info"]["end_cursor"]
                 variables["after"] = next_page_cursor
 
-        print(f'Finish: save {self.__save_count} rows')
-
-    def __save2CSV(self, user):
-        try:
-            with open(f'{self.__target_user.getUsername()}-follower-{self.__query_hash}.csv', 'a+', encoding='utf-8-sig') as csvfile:
-                writer = csv.DictWriter(csvfile, user.keys())
-                if self.__save_count == 0:
-                    writer.writeheader()
-                    writer.writerow(user)
-                else:
-                    writer.writerow(user)
-                self.__save_count += 1
-        except IOError:
-            print("I/O error")
+        FileManager.reponse_save_csv_file(userRecords, f'{self.__target_user.getUsername()}-follower-{self.__query_hash}.csv')
 
     @staticmethod
     def getUserBiography(username, trigger_user):

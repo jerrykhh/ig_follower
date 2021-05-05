@@ -30,6 +30,7 @@ class Following2CSV(Command):
 
         has_next_page = True
         count_request = 1
+        userRecords = []
 
         while has_next_page:
             response = requests.get(
@@ -41,11 +42,13 @@ class Following2CSV(Command):
             users = edge["edges"]
             print(users)
             print(f"Request {count_request}:", len(users), "found")
+
             for userNode in users:
                 user = userNode["node"]
                 # user["biography"] = self.getUserBiography(user["username"], self.getTriggerUser())
                 del user["reel"]
-                self.__save2CSV(user)
+                userRecords.append(user)
+                
 
             count_request += 1
             has_next_page = edge["page_info"]["has_next_page"]
@@ -53,27 +56,8 @@ class Following2CSV(Command):
             if has_next_page:
                 next_page_cursor = edge["page_info"]["end_cursor"]
                 variables["after"] = next_page_cursor
+        
 
-        print(f'Finish: save {self.__save_count} rows')
+        FileManager.reponse_save_csv_file(userRecords, f'{self.__target_user.getUsername()}-following-{self.__query_hash}.csv')
 
-    def __save2CSV(self, user):
-        try:
-            output_file_name = f'{self.__target_user.getUsername()}-following-{self.__query_hash}.csv'
-            if self.__save_count == 0:
-                if FileManager.file_exist(output_file_name):
-                    user_input = input("The file is exits, you want to override it? (YES/no)")
-                    if user_input == "no":
-                        sys.exit()
-                    elif user_input == "YES":
-                        os.remove(output_file_name)
 
-            with open(output_file_name, 'a+', encoding='utf-8-sig') as csvfile:
-                writer = csv.DictWriter(csvfile, user.keys())
-                if self.__save_count == 0:
-                    writer.writeheader()
-                    writer.writerow(user)
-                else:
-                    writer.writerow(user)
-                self.__save_count += 1
-        except IOError:
-            print("I/O error")

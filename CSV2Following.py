@@ -3,6 +3,7 @@ import json
 import requests
 import time
 import random
+import sys
 from datetime import datetime
 from CSV2Following_config import CSV2FollowingConfig
 from command import Command
@@ -43,9 +44,9 @@ class CSV2Following(Command):
                 except:
                     error_count += 1
                     try:
-                        if jsonData["spam"] is True or jsonData["spam"] == "True":
+                        if jsonData["spam"] is True or jsonData["spam"] == "True" or jsonData["spam"] == 'true':
                             print("Error: Instagram blocked your account follow function. Program will end.")
-                            exit()
+                            sys.exit()
                     except:
                         if error_count == self.__config.getConfig()["error_count"]:
                             print(f"Failed {error_count} times, it will sleep 3 hours")
@@ -62,7 +63,7 @@ class CSV2Following(Command):
                             except:
                                 print("Session Restart Failed, the program will End")
                                 exit()
-                time.sleep(self.__config.getConfig()["time"] + random.uniform(0.0, 10.0))
+                time.sleep(self.__config.getSleepTime())
             print(f'Processed {self.__line_count} lines.')
 
     @staticmethod
