@@ -28,6 +28,6 @@ class CSV2FollowingConfig:
     def getSleepTime(self):
         if self.__time == -1:
             return random.uniform(190.0, 600.0)
-        else
+        else:
             return self.__time + random.uniform(0.0, 150.0)
 
