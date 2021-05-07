@@ -1,4 +1,4 @@
-import requests, json, csv
+import requests, json, csv, time
 from command import Command
 from file_manager import FileManager
 
@@ -33,24 +33,34 @@ class Follower2CSV(Command):
             response = requests.get(f'https://www.instagram.com/graphql/query/?query_hash={self.__query_hash}&variables={json.dumps(variables)}', headers=self.getTriggerUser().getAccessAPICookies())
             jsonData = json.loads(response.text)
             print(jsonData)
-            edge = jsonData["data"]["user"]["edge_followed_by"]
-            users = edge["edges"]
-            print(users)
-            print(f"Request {count_request}:", len(users), "found")
-            for userNode in users:
-                user = userNode["node"]
-                #user["biography"] = self.getUserBiography(user["username"], self.getTriggerUser())
-                del user["reel"]
-                userRecords.append(user)
+            try:
+                edge = jsonData["data"]["user"]["edge_followed_by"]
+                users = edge["edges"]
+                print(users)
+                print(f"Request {count_request}:", len(users), "found")
+                
+                for userNode in users:
+                    user = userNode["node"]
+                    #user["biography"] = self.getUserBiography(user["username"], self.getTriggerUser())
+                    del user["reel"]
+                    userRecords.append(user)
 
-            count_request += 1
-            has_next_page = edge["page_info"]["has_next_page"]
+                count_request += 1
+                has_next_page = edge["page_info"]["has_next_page"]
 
-            if has_next_page:
-                next_page_cursor = edge["page_info"]["end_cursor"]
-                variables["after"] = next_page_cursor
+                if has_next_page:
+                    next_page_cursor = edge["page_info"]["end_cursor"]
+                    variables["after"] = next_page_cursor
+            except KeyError as e:
+                print(e)
+                if jsonData['status'] == 'fail':
+                    print(jsonData)
+                    print(f"Follower2CSV: Due to {jsonData['message']}, program will break 10 sec.")
+                    time.sleep(10)
+                    has_next_page = True
 
         FileManager.reponse_save_csv_file(userRecords, f'{self.__target_user.getUsername()}-follower-{self.__query_hash}.csv')
+
 
     @staticmethod
     def getUserBiography(username, trigger_user):

@@ -5,7 +5,7 @@ class CSV2FollowingConfig:
         print("The sleeping time is optional, if empty the sleeping time will randomly assign 190-600")
         if time is None:
             while True:
-                user_input = float(input("Please enter the sleeping time (seconds): "))
+                user_input = input("Please enter the sleeping time (seconds): ")
                 print("Program will assign more 0-150 seconds to reduce ban opportunity")
                 if user_input == '':
                     self.__time = -1
