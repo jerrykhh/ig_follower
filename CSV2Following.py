@@ -4,6 +4,7 @@ import requests
 import time
 import random
 import sys
+import os
 from datetime import datetime
 from CSV2Following_config import CSV2FollowingConfig
 from command import Command
@@ -80,6 +81,6 @@ class CSV2Following(Command):
                     ordered_dict_list.append(row)
                 total_row_count += 1
 
-            FileManager.save_csv_file(ordered_dict_list, "fitting-" + file_path)
+            FileManager.save_csv_file(ordered_dict_list, f"{os.path.dirname(os.path.abspath(__file__))}/fitting-{os.path.basename(file_path)}")
             print(f"CSV2Following(CSV: {file_path}): {total_row_count} rows found, {total_followed_count} rows is "
                   f"followed or requested")

@@ -1,3 +1,8 @@
+### Description
+It can save the following or follower data based on you is provided Instagram account username (the account must be followed/public account). In addition, the program is able to remove duplicate row or show duplicate only and save to new data file. Moreover, the program can follow the user automatically based on the data file, it will send the follow request to instagram server and for each request can set the customized time interval. User can utilize above method to follow the potential customer for your instagram business promotion/ data analysis.
+
+If you interesting this project, you can view my demo video in Youtube(Cantonese):
+[Youtube video Click Here](https://youtu.be/7SdcSPcPb8c)
 ### Features
 
 - Generate Instagram account follower/following list to CSV
@@ -7,7 +12,7 @@
 ### Installation (Follower/ Following to csv)
 ```
 git clone https://github.com/jerrykhh/ig_follower.git
-pip install requests
+pip install -r requirements.txt
 ```
 
 ### Usage (Follower/ Following to csv)
@@ -51,3 +56,12 @@ Please enter your password: this_is_your_password
 Please enter your file path: this_is_csv_file_path
 Please enter the sleeping time (30min = 60sec * 30min = input 1800): [Suggest > 190]
 ```
+
+### Known Limitation
+
+1. if the number of requests >= 200 will print "rate limited", due to Instagram limited
+   Solve: Change the IP address (such as VPN) when the program print following message
+   ```
+   Follower2CSV: Due to rate limited, program will break 10 sec.
+   ```
+   
