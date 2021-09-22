@@ -23,7 +23,7 @@ def main():
         for index in range(1, len_args):
             file_paths.append(sys.argv[index])
 
-CSVDiffComparer(file_paths).compare()
+    CSVDiffComparer(file_paths).compare()
 #CSVidenComparer(file_paths).compare()
 
 if __name__ == "__main__":
