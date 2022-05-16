@@ -29,6 +29,8 @@ class File:
     @staticmethod
     def append(data: list, output_path:str):
         if len(data) > 0:
+            if not Path(output_path).exists():
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
             fp = open(output_path, mode="a+", newline='', encoding='utf-8-sig')
             csv_writter = csv.DictWriter(fp, fieldnames=File.normailize(data[0].__dict__).keys())
             if os.stat(output_path).st_size == 0:
