@@ -1,27 +1,34 @@
-import sys
+from ig.user import User
+from ig.fnc import conn_graphql_follower_edge
+import argparse
 import time
-from login import Login
-from target_user import TargetUser
-from follower2csv import Follower2CSV
 
-def main():
-    len_args = len(sys.argv) - 1
+def main(args):
+    user = User(username=args.username, password=args.pwd, user_agent=args.user_agent)
+    for i, target in enumerate(args.target):
+        if args.output is None:
+            conn_graphql_follower_edge(user=user, username="".join(target))
+        else:
+            conn_graphql_follower_edge(user=user, username="".join(target), output_path=args.output)
+    
+        if len(args.target) > 1 and i < len(args.target)-1:
+            print(f"Break {args.sleep} secs")
+            time.sleep(args.sleep)
 
-    if len_args == 0:
-        login_panel = Login()
-    elif len_args == 3:
-        login_panel = Login(sys.argv)
-    else:
-        print("Command Arguments incorrect: python ig_follower2csv.py [username] [password] [Target Username]")
-
-    login_panel.login()
-    trigger_user = login_panel.getUser()
-    while(True):
-        target_user = TargetUser(trigger_user)
-        Follower2CSV(target_user, trigger_user).save()
-        print("break 5 sec, due to avoid to ban account")
-        del target_user
-        time.sleep(5)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Save the follower of target user data to csv")
+    parser.add_argument("--username", type=str, required=True, help="Instagram Username")
+    parser.add_argument("--pwd", type=str, required=True, help="Instagram Password")
+    parser.add_argument("--target", type=list, nargs="+", required=True, help="Target Instagram username")
+    parser.add_argument("--output", type=str, help="Output Directory")
+    parser.add_argument("--sleep", type=int, default=5, help="Sleep time for each request")
+    parser.add_argument("--user_agent", type=str, required=True, help="Please enter your common User Agent")
+    args = parser.parse_args()
+    # print(args.username)
+    # print(args.pwd)
+    # print(args.target)
+    # print(args.output)
+    # print(args.user_agent)
+    # print(args.sleep)
+    main(args)
