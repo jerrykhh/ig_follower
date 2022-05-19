@@ -2,7 +2,7 @@ from ig.file import File, CSVRead
 from ig.user import User, GeneralUser
 from pathlib import Path
 from datetime import datetime
-from ig.exception import UserLoginFailedException
+from ig.exception import UserLoginFailedException, RequestRateLimitedException, RequestOverException
 import pandas as pd
 import requests
 import json
@@ -31,6 +31,7 @@ def __login_two_factor(user: User):
 
 def __conn_grahql(session: requests.Session, url: str ) -> json or None:
     
+    over_count = 0
     while True:
         try:
             res = session.get(url, timeout=5)
@@ -40,10 +41,25 @@ def __conn_grahql(session: requests.Session, url: str ) -> json or None:
             elif not bool(json_data):
                 print(f"Response Empty, {json_data}")
             elif json_data["status"] != "ok":
+                if json_data['message'] == 'rate limited':
+                    raise RequestRateLimitedException()
+                if json_data['message'] == 'Please wait a few minutes before you try again.':
+                    raise RequestRateLimitedException()
                 print(f"Unknow Error, res={json_data}")
             
             return None
-        except requests.exceptions.RequestException as e:
+        except json.decoder.JSONDecodeError or ValueError:
+            print("Instagram is limited ~200 request, please change your IP address (VPN/ Proxy/ ...) if you want to contiune")
+            time.sleep(10)
+        except RequestOverException:
+            print(f"Your request > 200, need to wait a few minutes before you try again. Sleep {60*3*over_count} seconds")
+            over_count+=1
+            time.sleep(60*3*over_count)
+            
+        except RequestRateLimitedException:
+            print("Instagram is limited ~200 request, please change your IP address (VPN/ Proxy/ ...) if you want to contiune")
+            time.sleep(10)
+        except requests.exceptions.RequestException:
             print(f"Waiting Connection (Sleep 10 secs), please check you network ({datetime.now().strftime('%d %m %Y %H:%M:%S')})")
             time.sleep(10)
 
@@ -91,13 +107,14 @@ def conn_graphql_follower_edge(user: User, username: str, user_id:str=None, play
     
     if user_id is None:
         target_user = user.get_target_user(username)
+        user_id = target_user.id
 
     if not path.exists() or path.is_dir():
         output_path = f"{output_path}/{username}-follower-{datetime.now().strftime('%d%m%YT%H%M%S')}.csv"
         
     if playload is None:
         playload = {
-            'id': target_user.id if user_id is None else user_id,
+            'id': user_id,
             'include_reel': False,
             'fetch_mutual': False,
             'first': 50
@@ -129,13 +146,14 @@ def conn_graphql_following_edge(user: User, username: str, user_id:str=None, pla
     
     if user_id is None:
         target_user = user.get_target_user(username)
+        user_id = target_user.id
 
     if not path.exists() or path.is_dir():
         output_path = f"{output_path}/{username}-following-{datetime.now().strftime('%d%m%YT%H%M%S')}.csv"
         
     if playload is None:
         playload = {
-            'id': target_user.id if user_id is None else user_id,
+            'id': user_id,
             'include_reel': False,
             'fetch_mutual': False,
             'first': 50

@@ -3,7 +3,7 @@ import requests
 from abc import ABC
 from requests import Session
 from ig.edge import PostEdge
-from ig.exception import UserLoginChallengeFailed, SpamDetectedException
+from ig.exception import UserLoginChallengeFailed, SpamDetectedException, SelectContactPointRecoveryFormException
 from datetime import datetime
 from typing import Tuple
 
@@ -32,7 +32,7 @@ class NodeUser(__USER):
     
     def __init__(self, session: Session, user_inf: dict):
         super().__init__(session)
-        self.id: str = user_inf["id"]
+        self.id: str = user_inf["id"] if "id" in user_inf else user_inf["pk"]
         self.full_name: str = user_inf["full_name"]
         self.username: str = user_inf["username"]
         self.followed_by_viewer: bool = user_inf["followed_by_viewer"] if "followed_by_viewer" in user_inf else None
@@ -208,11 +208,25 @@ class User(__USER):
         res_data = self.session.post(f"https://www.instagram.com{checkpoint_url}", data={"choice": "1"}, headers={"x-instagram-ajax": "9bcc5b5208c5"})
         print(res_data)
         print(res_data.content)
+     
         res_data = json.loads(res_data.content)
+        if "challengeType" in res_data and res_data['challengeType'] == "SelectContactPointRecoveryForm":
+            raise SelectContactPointRecoveryFormException()
+                # self.session.get(f"https://www.instagram.com{res_data['navigation']['forward']}")
+                # print("Verify your account by following inf:")
+                # if  "email" in res_data["fields"]:
+                #     print(f"0: option: {res_data['fields']['email']}")
+                    
+                # if "phone_number" in res_data["fields"]:
+                #     print(f"1: option: {res_data['fields']['phone_number']}")
+                # choice = input("Please enter your choice (index): ")
+                
+                
         print(f"The verify code is sent to {res_data['fields']['contact_point']} ({res_data['fields']['form_type']})")
         verify_code = input("Please enter received veify code: ")
         res = self.session.post(f"https://www.instagram.com{res_data['navigation']['forward']}", data={"security_code": verify_code})
         
+            
         if res.status_code == 200:
             return True
         
