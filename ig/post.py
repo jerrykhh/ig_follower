@@ -1,6 +1,6 @@
 import json
 import requests
-import ig.user as user
+import ig.user
 
 
 class Post:
@@ -12,7 +12,7 @@ class Post:
         self.id: str = post_json["id"]
         self.shortcode: str = post_json["shortcode"]
         self.display_url: str = post_json["display_url"]
-        self.tagged_user = [user.PreviewUser(session, user["node"]["user"]) for user in post_json["edge_media_to_tagged_user"]["edges"]]
+        self.tagged_user = [ig.user.PreviewUser(session, user["node"]["user"]) for user in post_json["edge_media_to_tagged_user"]["edges"]]
         
         self.is_video: bool = post_json["is_video"]
         self.comments_disabled: bool = bool(post_json["comments_disabled"])

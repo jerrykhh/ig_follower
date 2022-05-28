@@ -7,15 +7,19 @@ import time
 
 def main(args):
     user = User(username=args.username, password=args.pwd, user_agent=args.user_agent)
-    for i, target in enumerate(args.target):
-        if args.output is None:
-            conn_graphql_following_edge(user=user, username="".join(target))
-        else:
-            conn_graphql_following_edge(user=user, username="".join(target), output_path=args.output)
     
-        if len(args.target) > 1 and i < len(args.target)-1:
-            print(f"Break {args.sleep} secs")
-            time.sleep(args.sleep)
+    try:
+        for i, target in enumerate(args.target):
+            if args.output is None:
+                conn_graphql_following_edge(user=user, username="".join(target))
+            else:
+                conn_graphql_following_edge(user=user, username="".join(target), output_path=args.output)
+        
+            if len(args.target) > 1 and i < len(args.target)-1:
+                print(f"Break {args.sleep} secs")
+                time.sleep(args.sleep)
+    except ValueError as e:
+        print(f"Unknow Error: Please change your account whether Instagram soft locked. ({e})")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Save the follower of target user data to csv")
