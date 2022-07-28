@@ -21,8 +21,7 @@ class __USER:
         return False, json_data
 
     def unfollow(self, id: str):
-        res = self.session.post(f"https://www.instagram.com/web/friendships/{id}/unfollow/")
-        print(res.text)
+        res = self.session.post(f"https://www.instagram.com/web/friendships/{id}/unfollow/", headers={"x-instagram-ajax": "1005924255"})
         json_data = json.loads(res.content)
         if "status" in json_data and json_data["status"] == "ok":
             return True, json_data

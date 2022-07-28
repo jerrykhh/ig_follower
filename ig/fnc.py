@@ -319,7 +319,9 @@ def __logging(data: str, logging_path:str):
         fp.write(f"{datetime.now().strftime('%d%m%YT%H%M%S')}: {data}\n")
         fp.close()
         
-def use_follow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float=8*60, log_path:str = None):
+
+def __conn_friendship(friendship_func, user: User, data_file: str, if_err_count_sleep:int=3, sleep:float=8*60, log_path:str = None):
+    
     use_login(user)
     df: pd.DataFrame = CSVRead([data_file]).execute().pop()
     error_count = 0
@@ -327,12 +329,13 @@ def use_follow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float
     i = 0
     while i < len(df):
         
-        result, res = user.follow(df['id'][i])
+        result, res = friendship_func(df['id'][i])
         if not result:
             
             if "spam" in res and res["spam"]:
                 print("Program END: Instagram may blocked your account follow function.")
                 __logging(f"Program END: Spam detected, instagram may blocked your account follow function. ({res})", log_path)
+                exit(1)
             else:
                 
                 sleep_sec = 60*10 # 10min
@@ -367,8 +370,8 @@ def use_follow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float
                 error_count+=1
         else:
             
-            print(f"{res['result']} {df['username'][i]} ({df['id'][i]}) at {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}")
-            __logging(f"{res['result']} {df['username'][i]} ({df['id'][i]}). ({res})", log_path)
+            print(f"{res} {df['username'][i]} ({df['id'][i]}) at {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}")
+            __logging(f"{df['username'][i]} ({df['id'][i]}). ({res})", log_path)
             i+=1
             
             if i < len(df):
@@ -377,4 +380,11 @@ def use_follow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float
     
     print(f"Task Finish, total: {len(df)} rows")
     __logging(f"Task Finish, total: {len(df)} rows", log_path)
-                
+    
+
+def use_follow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float=8*60, log_path:str = None):
+    __conn_friendship(user.follow, user, data_file, if_err_count_sleep, sleep, log_path)
+
+def use_unfollow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float=8*60, log_path:str = None):
+    __conn_friendship(user.unfollow, user, data_file, if_err_count_sleep, sleep, log_path)
+   

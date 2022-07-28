@@ -83,7 +83,7 @@ python ig_postliked2csv.py --username "your_username" \
 
 ```
 python ig_csv.py --action "merge&rm_fol"  \
-    --files ./output/file1.csv ./output/file2.csv
+    --files ./output/file1.csv ./output/file2.csv \
     --output ./output/
 ```
 
@@ -100,9 +100,19 @@ python ig_csv.py --action "merge&rm_fol"  \
 python ig_follow.py --username "your_username" \
     --pwd "your_password" \
     --user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36" \ 
-    --data ./output/test-2.csv
+    --data ./output/test-2.csv \
+    --log ./output/test-log.txt
+```
+## Unfollow Users based on provided csv file
+```
+python ig_unfollow.py --username "your_username" \
+    --pwd "your_password" \
+    --user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36" \ 
+    --data ./output/test-2.csv \
     --log ./output/test-log.txt
 ```
 
+
 ## Known Limitation
 1. if the number of requests >= 200 will print "rate limited" for get the user data to csv file, due to Instagram limited -> Solve: Change the IP address (such as VPN)
+2. If your password contain "!" and the Terminal is throw "zsh: parse error near `)'" please use '\!' For example: "abcdeGF!" -> "abcdeGF\!"
