@@ -12,7 +12,8 @@ class Post:
         self.id: str = post_json["id"]
         self.shortcode: str = post_json["shortcode"]
         self.display_url: str = post_json["display_url"]
-        self.tagged_user = [ig.user.PreviewUser(session, user["node"]["user"]) for user in post_json["edge_media_to_tagged_user"]["edges"]]
+        if self.typeName != "GraphVideo":
+            self.tagged_user = [ig.user.PreviewUser(session, user["node"]["user"]) for user in post_json["edge_media_to_tagged_user"]["edges"]]
         
         self.is_video: bool = post_json["is_video"]
         self.comments_disabled: bool = bool(post_json["comments_disabled"])
@@ -21,7 +22,7 @@ class Post:
         self.count_comment: int = int(post_json["edge_media_to_comment"]["count"])
         self.posted_timstamp = int(post_json["taken_at_timestamp"])
         self.location: str = post_json["location"]
-        
+        self.timestamp: int = post_json["taken_at_timestamp"]
         self.count_liked_by: int = int(post_json["edge_liked_by"]["count"])
         # self.liked_edge: LikeEdge = None
     

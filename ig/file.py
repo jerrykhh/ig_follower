@@ -24,6 +24,13 @@ class File:
         tmp_row = row.copy()
         if "session" in tmp_row:
             del tmp_row["session"]
+        
+        if "mutual_followed_by" in tmp_row:
+            del tmp_row["mutual_followed_by"]
+
+        if "post_edge" in tmp_row:
+            del tmp_row["post_edge"]
+        
         return tmp_row
     
     @staticmethod
@@ -100,13 +107,13 @@ class CSVPosting(CSVProcesser):
         if "merge" in self.actions:
             if len(self.data) == 1:
                 df: pd.DataFrame = self.data.pop()
-                df.to_csv(self.output_path,index=False)
+                df.to_csv(self.output_path,index=False, encoding='utf-8-sig')
                 print(f"Saved at {self.output_path}")
             else:
                 raise Exception("Length Error")
         else:
             for file_path, df in zip(self.files, self.data):
-                df.to_csv(file_path, index=False)
+                df.to_csv(file_path, index=False, encoding='utf-8-sig')
                 print(f"Saved at {file_path}")
             
 class CSVProcess:

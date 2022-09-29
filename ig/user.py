@@ -1,4 +1,5 @@
 import json
+from time import sleep
 import requests
 from abc import ABC
 from requests import Session
@@ -6,7 +7,6 @@ from ig.edge import PostEdge
 from ig.exception import UserLoginChallengeFailed, SpamDetectedException, SelectContactPointRecoveryFormException
 from datetime import datetime
 from typing import Tuple
-
 
 class __USER:
     
@@ -82,9 +82,10 @@ class TargetUser(GeneralUser):
     
     def __init__(self, session: requests.Session, inf_json: json) -> None:
         super().__init__(session=session, user_inf=inf_json["graphql"]["user"])
-        self.seo_category_infos:list = [ seo[1] for seo in inf_json["seo_category_infos"]]
+        if "seo_category_infos" in inf_json:
+            self.seo_category_infos:list = [ seo[1] for seo in inf_json["seo_category_infos"]]
         inf_json = inf_json["graphql"]["user"]
-        self.biography: str = inf_json["biography"]
+        self.biography: str = str(inf_json["biography"]).replace("\n", "")
         self.blocked_by_viewer: bool = inf_json["blocked_by_viewer"]
         self.restricted_by_viewer: bool = inf_json["restricted_by_viewer"]
         
@@ -145,15 +146,25 @@ class User(__USER):
         self.password = password
         
         self.two_factore_info = None
-        self.session.get('https://www.instagram.com/accounts/login/')
-        self.session.headers.update({
-            'User-agent': user_agent,
-            'x-csrftoken': self.session.cookies['csrftoken']
-        })
-        print(f"csrftoken: {self.session.cookies['csrftoken']}")
+        self.user_agent = user_agent
+        self.refesh_csrftoken()
         self.is_login = False
         self.is_logout = False
     
+    def refesh_csrftoken(self):
+        self.session.get('https://www.instagram.com/accounts/login/')
+        self.session.headers.update({
+            'User-agent': self.user_agent,
+            'x-csrftoken': self.session.cookies['csrftoken']
+        })
+        print(f"csrftoken: {self.session.cookies['csrftoken']}")
+        
+    
+    def clear_session(self):
+        self.session.cookies.clear()
+        self.session.close()
+        self.refesh_csrftoken()
+        self.is_login = False
         
     def login(self):
         time = int(datetime.now().timestamp())
@@ -316,7 +327,23 @@ class User(__USER):
             return None
         
         return TargetUser(self.session, res_data)
-    
+
+    def get_target_users(self, usernames: list[str], append_file_fnc=None, output_path=None) -> list[TargetUser]:
+        users = []
+        for i, username in enumerate(usernames):
+            user = self.get_target_user(username)
+            if user is not None:
+                users.append(user)
+            
+            if i == 5:
+                sleep(5)
+            
+        if append_file_fnc is not None:
+            append_file_fnc(users, output_path)
+        
+        print(users)
+        return users
+            
     def clear_session(self):
         self.session.cookies.clear()
         self.is_login = False
@@ -331,4 +358,71 @@ class User(__USER):
 #         self.post_id = post_id
     
 #     def save_like_to_csv(self, output_path:str) -> None:
+
+
+
+# class TempNoLoginUser:
         
+#     def create_new_session(self, user_agent:str=None):
+#         self.user_agent = user_agent
+#         if user_agent is None:
+#             self.user_agent = random.choice(
+#                     ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+#                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
+#                      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
+#                      "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 244.0.0.12.112 (iPhone12,1; iOS 15_5; en_US; en-US; scale=2.00; 828x1792; 383361019)",
+#                      "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 243.1.0.14.111 (iPhone12,1; iOS 15_5; en_US; en-US; scale=2.00; 828x1792; 382468104) NW/3"
+#                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.18362",
+#                      "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586",
+#                      "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299",
+#                      "Mozilla/5.0 (Windows NT 5.1; rv:7.0.1) Gecko/20100101 Firefox/7.0.1",
+#                      "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:24.0) Gecko/20100101 Firefox/24.0",
+#                      "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:57.0) Gecko/20100101 Firefox/57.0",
+#                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:67.0) Gecko/20100101 Firefox/67.0"
+#                      "Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+#                      "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+#                      "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063",
+#                      "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36",
+#                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
+#                      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
+#                      "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"
+#                      ])
+#         return aiohttp.ClientSession(headers={
+#             'User-agent': self.user_agent,
+#             'x-ig-app-id': '936619743392459'
+#         })
+        
+#     async def get_target_user(self, username: str) -> dict:
+#         session = self.create_new_session()
+#         try:
+
+#             res = await session.get(f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}")
+#             data = await res.json()
+#             await session.close()
+        
+#             fake_graphql_res = {"graphql": {}}
+#             fake_graphql_res["graphql"] = data['data']
+            
+#             return TargetUser(None, fake_graphql_res)
+#         except aiohttp.client.ContentTypeError:
+#             print("Login is required")
+#             await session.close()
+        
+#         return None
+    
+#     async def get_target_users(self, usernames: list[str], append_file_fnc=None, output_path=None) -> list[dict]:
+#         users = []
+#         for i, username in enumerate(usernames):
+#             try:
+#                 user = await self.get_target_user(username)
+#                 if user is not None:
+#                     users.append(user)
+#                 if i % 5 == 0:
+#                     sleep(1)
+#             except Exception as e:
+#                 print(f"Unknown Error: {e}")
+                
+#         if append_file_fnc is not None:
+#             append_file_fnc(users, output_path)
+        
+#         return users

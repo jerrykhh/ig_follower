@@ -1,5 +1,7 @@
 # ig_follower
 
+> Fetching user follower and user following is changed to Instagram Restful API from GraphQL
+
 ## Description
 It can save the following or follower data based on you is provided Instagram account username (the account must be followed/public account). In addition, the program is able to remove duplicate row or show duplicate only and save to new data file. Moreover, the program can follow the user automatically based on the data file, it will send the follow request to instagram server and for each request can set the customized time interval. User can utilize above method to follow the potential customer for your instagram business promotion/ data analysis.
 \* Now Updated version handled is supported the two factor authentication and login challenge (email)
@@ -13,6 +15,7 @@ If you interesting this project, you can view my demo video in Youtube(Cantonese
 3. Get Instagram Post Liked users to CSV file
 4. Combine the CSV file
 5. Follow the user automatically based on provided csv file
+6. Fetching user details (Testing)
 
 
 ## Installation 
@@ -111,8 +114,28 @@ python ig_unfollow.py --username "your_username" \
     --data ./output/test-2.csv \
     --log ./output/test-log.txt
 ```
+## Fetching User Details (Testing)
+```
+-h, --help            show this help message and exit
+--username            Instagram Username
+--pwd PWD             Instagram Password
+--user_agent          Please enter your common User Agent
+--data DATA           data file (.csv) path [id col is required
+--thread THREAD       Number of Threading for fetching (default: 2)
+--output OUTPUT       Output Directory
+```
+
+```
+python ig_biography.py --username "your_username" \
+    --pwd "your_password" \
+    --user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36" \ 
+    --data ./output/test-2.csv \
+    --thread 3
+```
+### Limitation
+It cannot fetching user information many time when the user is not login, it will redirect to login page. Therefore, the login is required. Also, the ThreadingPool and AsyncIO method is commented due to the too quick to access instagram api. If you want to test just uncomment it. In addition, i tested if set thread 10 the instagram will be temp lock your account.
 
 
-## Known Limitation
+## Known Limitation2
 1. if the number of requests >= 200 will print "rate limited" for get the user data to csv file, due to Instagram limited -> Solve: Change the IP address (such as VPN)
 2. If your password contain "!" and the Terminal is throw "zsh: parse error near `)'" please use '\!' For example: "abcdeGF!" -> "abcdeGF\!"

@@ -1,5 +1,5 @@
 from ig.user import User
-from ig.fnc import conn_graphql_follower_edge
+from ig.fnc import conn_graphql_follower_edge, conn_restful_follower_api
 import argparse
 import time
 
@@ -9,9 +9,11 @@ def main(args):
     try:
         for i, target in enumerate(args.target):
             if args.output is None:
-                conn_graphql_follower_edge(user=user, username="".join(target))
+                conn_restful_follower_api(user=user, username="".join(target))
+                # conn_graphql_follower_edge(user=user, username="".join(target))
             else:
-                conn_graphql_follower_edge(user=user, username="".join(target), output_path=args.output)
+                conn_restful_follower_api(user=user, username="".join(target), output_path=args.output)
+                # conn_graphql_follower_edge(user=user, username="".join(target), output_path=args.output)
         
             if len(args.target) > 1 and i < len(args.target)-1:
                 print(f"Break {args.sleep} secs")

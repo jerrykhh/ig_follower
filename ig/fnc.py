@@ -1,13 +1,16 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor, wait
+import threading
 from ig.file import File, CSVRead
-from ig.user import User, GeneralUser
+from ig.user import TargetUser, User, GeneralUser
 from pathlib import Path
 from datetime import datetime
 from ig.exception import UserLoginFailedException, RequestRateLimitedException, RequestOverException
 import pandas as pd
 import requests
 import json
-import time
 import sys
+import time
 
 GRAPHQL_QUERY_ENDPOINT = "https://www.instagram.com/graphql/query/"
 RESFUL_API_ENPOINT = "https://i.instagram.com/api/v1/"
@@ -90,9 +93,10 @@ def conn_graphql_like_edge(user:User, short_code:str, playload:dict=None, output
             File.append(data=liked_users, output_path=f"{output_path}")
             
             page_info = edge["page_info"]
+            print(page_info)
             if bool(page_info["has_next_page"]):
                     playload["after"] = page_info["end_cursor"]
-                    print(f"{len(liked_users)} found, has next: False")
+                    print(f"{len(liked_users)} found, has next: True")
                     conn_graphql_like_edge(user, short_code, playload, output_path)
             else:
                 print(f"{len(liked_users)} found, has next: False")
@@ -129,6 +133,7 @@ def conn_graphql_follower_edge(user: User, username: str, user_id:str=None, play
             File.append(data=followered_users, output_path=f"{output_path}")
             
             page_info = edge["page_info"]
+            print(page_info)
             if bool(page_info["has_next_page"]):
                 print(f"{len(followered_users)} found, has next: True")
                 playload["after"] = page_info["end_cursor"]
@@ -168,6 +173,7 @@ def conn_graphql_following_edge(user: User, username: str, user_id:str=None, pla
             File.append(data=following_users, output_path=f"{output_path}")
             
             page_info = edge["page_info"]
+            print(page_info)
             if bool(page_info["has_next_page"]):
                     print(f"{len(following_users)} found, has next: True")
                     playload["after"] = page_info["end_cursor"]
@@ -203,7 +209,7 @@ def __conn_resful_showmany(session: requests.Session, url: str, data: dict, app_
             res = session.post(url, timeout=5, data=data, headers={
                 "content-type": "application/x-www-form-urlencoded",
                 "x-ig-app-id": app_id})
-            print(res)
+            # print(res)
             json_data = json.loads(res.content)
             if bool(json_data) and json_data["status"] == "ok" :
                 return json_data
@@ -329,55 +335,67 @@ def __conn_friendship(friendship_func, user: User, data_file: str, if_err_count_
     i = 0
     while i < len(df):
         
-        result, res = friendship_func(df['id'][i])
-        if not result:
-            
-            if "spam" in res and res["spam"]:
-                print("Program END: Instagram may blocked your account follow function.")
-                __logging(f"Program END: Spam detected, instagram may blocked your account follow function. ({res})", log_path)
-                exit(1)
-            else:
+        try:
+        
+            result, res = friendship_func(df['id'][i])
+            if not result:
                 
-                sleep_sec = 60*10 # 10min
-                
-                if error_count == if_err_count_sleep:
-                    print(f"Failed {error_count} times, it will sleep 3 hours")
-                    __logging(f"Failed {error_count} times, it will sleep 3 hours. ({res})", log_path)
-                    sleep_sec = 60*60*3
-                    i+=1
-                elif error_count == if_err_count_sleep+1:
-                    print(f"Program END: try {if_err_count_sleep}+1 times it still error")
-                    __logging(f"Program END: try {if_err_count_sleep}+1 times it still error. ({res})", log_path)
+                if "spam" in res and res["spam"]:
+                    print("Program END: Instagram may blocked your account follow function.")
+                    __logging(f"Program END: Spam detected, instagram may blocked your account follow function. ({res})", log_path)
                     exit(1)
                 else:
                     
-                    print("Request Error: Due to the server request blocked, it will sleep 10min")
-                    __logging(f"Request Error: Due to the server request blocked, it will sleep 10min and login again. ({res})", logging_path=log_path)
-                    print("Login again.")
-                    try:
-                        user.logout()
-                    except:
-                        pass
+                    sleep_sec = 60*10 # 10min
                     
-                    try:
-                        user.clear_session()
-                        user.login()
-                    except:
-                        print("Program END: Session restart failed")
-                        __logging("Program END: Session restart failed. ({res})", log_path)
+                    if error_count == if_err_count_sleep:
+                        print(f"Failed {error_count} times, it will sleep 3 hours")
+                        __logging(f"Failed {error_count} times, it will sleep 3 hours. ({res})", log_path)
+                        sleep_sec = 60*60*3
+                        i+=1
+                    elif error_count == if_err_count_sleep+1:
+                        print(f"Program END: try {if_err_count_sleep}+1 times it still error")
+                        __logging(f"Program END: try {if_err_count_sleep}+1 times it still error. ({res})", log_path)
                         exit(1)
-                time.sleep(sleep_sec)
-                error_count+=1
-        else:
+                    else:
+                        
+                        print("Request Error: Due to the server request blocked, it will sleep 10min")
+                        __logging(f"Request Error: Due to the server request blocked, it will sleep 10min and login again. ({res})", logging_path=log_path)
+                        print("Login again.")
+                        try:
+                            user.logout()
+                        except:
+                            pass
+                        
+                        try:
+                            user.clear_session()
+                            user.login()
+                        except:
+                            print("Program END: Session restart failed")
+                            __logging("Program END: Session restart failed. ({res})", log_path)
+                            exit(1)
+                    time.sleep(sleep_sec)
+                    error_count+=1
+            else:
+                
+                print(f"{res} {df['username'][i]} ({df['id'][i]}) at {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}")
+                __logging(f"{df['username'][i]} ({df['id'][i]}). ({res})", log_path)
+                i+=1
+                
+                if i < len(df):
+                    time.sleep(sleep)
+                
+                # Login again due to the instagram set Session Follow limited ~ 200 people
+                if i % 200 == 0:
+                    user.clear_session()
+                    print("Session Clear")
+                    __logging("Session Clear and Refesh", log_path)
+                
+        except Exception:
+            print("Response Decode Failed")
+            __logging("Response Decode Failed, sleep 2hour", log_path)
+            time.sleep(60*60*2)
             
-            print(f"{res} {df['username'][i]} ({df['id'][i]}) at {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}")
-            __logging(f"{df['username'][i]} ({df['id'][i]}). ({res})", log_path)
-            i+=1
-            
-            if i < len(df):
-                time.sleep(sleep)
-    
-    
     print(f"Task Finish, total: {len(df)} rows")
     __logging(f"Task Finish, total: {len(df)} rows", log_path)
     
@@ -387,4 +405,60 @@ def use_follow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float
 
 def use_unfollow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float=8*60, log_path:str = None):
     __conn_friendship(user.unfollow, user, data_file, if_err_count_sleep, sleep, log_path)
-   
+
+
+lock = threading.Lock()
+
+def __append_file(users: list[TargetUser], output_path: str):
+    lock.acquire()
+    File.append(data=users, output_path=output_path)
+    lock.release()
+
+
+def use_get_user_biography(user: User, data_file: str, max_thread=10, output_path: str=f"{File.get_file_dir()}/output"):
+    print(output_path)
+    new_file_name = f"userdetail-{Path(data_file).name}"
+    df: pd.DataFrame = CSVRead([data_file]).execute().pop()
+    total_user = df.shape[0]
+    slice_len = int(total_user/max_thread)
+    usernames = df['username'].values.tolist()
+    usernames = [usernames[i:i+slice_len] for i in range(0, len(usernames), slice_len)]
+    
+    use_login(user=user)
+    
+    
+    with ThreadPoolExecutor(max_workers=max_thread) as executor:
+         
+        futures = [executor.submit(user.get_target_users, username, __append_file, f"{output_path}/{new_file_name}") for username in usernames ]
+        wait(futures)
+
+        
+        
+    
+    print(f"file saved {new_file_name} at {datetime.now()}") 
+
+# async def use_get_user_biography(data_file: str, max_thread=10, output_path: str=f"{File.get_file_dir()}/output"):
+
+    # print(output_path)
+    # new_file_name = f"userdetail-{Path(data_file).name}"
+    # df: pd.DataFrame = CSVRead([data_file]).execute().pop()
+    # total_user = df.shape[0]
+    # slice_len = int(total_user/max_thread)
+    # usernames = df['username'].values.tolist()
+    # usernames = [usernames[i:i+slice_len] for i in range(0, len(usernames), slice_len)]
+    
+    # loop = asyncio.get_event_loop()
+    
+    # with ThreadPoolExecutor(max_workers=max_thread) as executor:
+         
+    #     furtures = []
+    #     for username in usernames:
+    #         tempNoLoginUser = TempNoLoginUser()
+    #         furtures.append(await loop.run_in_executor(executor, tempNoLoginUser.get_target_users, username, __append_file, f"{output_path}/{new_file_name}"))
+
+        
+    #     [target_user for target_user in await asyncio.gather(*furtures)]
+    
+    # print(f"file saved {new_file_name} at {datetime.now()}")
+    
+    
