@@ -136,6 +136,6 @@ python ig_biography.py --username "your_username" \
 It cannot fetching user information many time when the user is not login, it will redirect to login page. Therefore, the login is required. Also, the ThreadingPool and AsyncIO method is commented due to the too quick to access instagram api. If you want to test just uncomment it. In addition, i tested if set thread 10 the instagram will be temp lock your account.
 
 
-## Known Limitation2
+## Known Limitation
 1. if the number of requests >= 200 will print "rate limited" for get the user data to csv file, due to Instagram limited -> Solve: Change the IP address (such as VPN)
-2. If your password contain "!" and the Terminal is throw "zsh: parse error near `)'" please use '\!' For example: "abcdeGF!" -> "abcdeGF\!"
+2. If your password contain "!" and the Terminal is throw "zsh: parse error near `)'" please use single quota ('') For example: "abcdeGF!" -> 'abcdeGF!'

@@ -328,7 +328,7 @@ class User(__USER):
         
         return TargetUser(self.session, res_data)
 
-    def get_target_users(self, usernames: list[str], append_file_fnc=None, output_path=None) -> list[TargetUser]:
+    def get_target_users(self, usernames: list, append_file_fnc=None, output_path=None) -> list:
         users = []
         for i, username in enumerate(usernames):
             user = self.get_target_user(username)

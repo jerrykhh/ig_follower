@@ -409,7 +409,7 @@ def use_unfollow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:flo
 
 lock = threading.Lock()
 
-def __append_file(users: list[TargetUser], output_path: str):
+def __append_file(users: list, output_path: str):
     lock.acquire()
     File.append(data=users, output_path=output_path)
     lock.release()
