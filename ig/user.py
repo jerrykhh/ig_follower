@@ -160,11 +160,12 @@ class User(__USER):
         print(f"csrftoken: {self.session.cookies['csrftoken']}")
         
     
-    def clear_session(self):
+    def rebuild(self):
         self.session.cookies.clear()
         self.session.close()
-        self.refesh_csrftoken()
-        self.is_login = False
+        # self.refesh_csrftoken()
+        # self.is_login = False
+        return User(username=self.username, password=self.password, user_agent=self.user_agent)
         
     def login(self):
         time = int(datetime.now().timestamp())

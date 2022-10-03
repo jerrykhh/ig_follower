@@ -368,8 +368,7 @@ def __conn_friendship(friendship_func, user: User, data_file: str, if_err_count_
                             pass
                         
                         try:
-                            user.clear_session()
-                            user.login()
+                            user = user.rebuild()
                         except:
                             print("Program END: Session restart failed")
                             __logging("Program END: Session restart failed. ({res})", log_path)
@@ -387,13 +386,14 @@ def __conn_friendship(friendship_func, user: User, data_file: str, if_err_count_
                 
                 # Login again due to the instagram set Session Follow limited ~ 200 people
                 if i % 200 == 0:
-                    user.clear_session()
+                    user = user.rebuild()
                     print("Session Clear")
                     __logging("Session Clear and Refesh", log_path)
+                    time.sleep(60*60*1) # sleep 1 hours
                 
-        except Exception:
+        except Exception as e:
             print("Response Decode Failed")
-            __logging("Response Decode Failed, sleep 2hour", log_path)
+            __logging(f"Response Decode Failed, sleep 2hour {e}", log_path)
             time.sleep(60*60*2)
             
     print(f"Task Finish, total: {len(df)} rows")
