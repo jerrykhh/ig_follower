@@ -7,6 +7,7 @@ from ig.edge import PostEdge
 from ig.exception import UserLoginChallengeFailed, SpamDetectedException, SelectContactPointRecoveryFormException
 from datetime import datetime
 from typing import Tuple
+import re
 
 class __USER:
     
@@ -152,12 +153,22 @@ class User(__USER):
         self.is_logout = False
     
     def refesh_csrftoken(self):
-        self.session.get('https://www.instagram.com/accounts/login/')
+        res = self.session.get('https://www.instagram.com/accounts/login/')
+        
+        if 'csrftoken' not in self.session.cookies:
+            csrftokens: list = re.findall(r'{\\\"csrf_token\\\":\\\"(.*)\\\"\,\\\"viewer',res.text)
+            if len(csrftokens) < 1:
+                raise Exception('Fetch csrftoken failed')
+            csrftoken = csrftokens[0]
+        else:
+            csrftoken = self.session.cookies['csrftoken']
+     
         self.session.headers.update({
             'User-agent': self.user_agent,
-            'x-csrftoken': self.session.cookies['csrftoken']
+            'x-csrftoken': csrftoken
         })
-        print(f"csrftoken: {self.session.cookies['csrftoken']}")
+        
+        print(f"csrftoken: {csrftoken}")
         
     
     def rebuild(self):
