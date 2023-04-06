@@ -2,7 +2,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor, wait
 import threading
 from ig.file import File, CSVRead
-from ig.user import TargetUser, User, GeneralUser
+from ig.user import TargetUser, User, GeneralUser, SESSION_CACHE_FILE
 from pathlib import Path
 from datetime import datetime
 from ig.exception import UserLoginFailedException, RequestRateLimitedException, RequestOverException
@@ -11,12 +11,29 @@ import requests
 import json
 import sys
 import time
+import re
+import pickle
+from requests_html import HTMLSession
 
 GRAPHQL_QUERY_ENDPOINT = "https://www.instagram.com/graphql/query/"
 RESFUL_API_ENPOINT = "https://i.instagram.com/api/v1/"
 
-def use_login(user: User):
+def use_login(user: User, load_cache:bool=True):
     if not user.is_login:
+        
+        try:
+            tmp_cache_session = Path(SESSION_CACHE_FILE)
+            if load_cache and tmp_cache_session.exists():
+                print("Load cache for login")
+                with open(SESSION_CACHE_FILE, 'rb') as cache_session_fp:
+                    user.session = pickle.load(cache_session_fp)
+                user.is_login = True
+                # print(user.session.cookies)
+                return 
+        except Exception as e:
+            print("Load .cache failed" + str(e))
+            user.is_login = False
+        print("test")
         two_factor, logined = user.login()
         
         if two_factor:
@@ -65,7 +82,40 @@ def __conn_grahql(session: requests.Session, url: str ) -> json or None:
         except requests.exceptions.RequestException:
             print(f"Waiting Connection (Sleep 10 secs), please check you network ({datetime.now().strftime('%d %m %Y %H:%M:%S')})")
             time.sleep(10)
+    
 
+def conn_restful_like_edge(user: User, cache_login:bool, short_code: str, media_id: None, playload:dict=None, output_path: str=f"{File.get_file_dir()}/output"):
+    
+    path = Path(output_path)
+    
+    use_login(user, load_cache=cache_login)
+    
+    if not path.exists() or path.is_dir():
+        output_path = f"{output_path}/likedpost-{short_code}-{datetime.now().strftime('%d%m%YT%H%M%S')}.csv"
+
+    if media_id is None:
+        print("Fetching Post media_id")
+        session = HTMLSession()
+        session.cookies.update(user.session.cookies.get_dict())
+        res = session.get(f"https://www.instagram.com/p/{short_code}/")
+        res.html.render(reload=False)
+        # print(res.search_all(r'\"media_id\":\"(\d*)\"'))
+        # open("./tmp", mode="a+").write(res_html.text)
+        media_ids = re.findall(r'\"media_id\":\"(\d*)\"', res.html.html)
+        open("./tmp", mode="a+").write(res.html.html)
+        if len(media_ids) <= 0:
+            raise Exception("Fetech Post Media ID failed")
+        media_id = media_ids[0]
+    
+        print(f"media_id: {media_id}")
+        
+    res = __conn_resful(user.session, url=f"{RESFUL_API_ENPOINT}media/{media_id}/likers/")
+    if res is not None:
+        data = __resful_api_normailize(user.session, res["users"])
+        File.append(data, output_path=f"{output_path}")
+        print(f"{len(data)} found")
+        
+        
 def conn_graphql_like_edge(user:User, short_code:str, playload:dict=None, output_path: str=f"{File.get_file_dir()}/output", query_hash:str="d5d763b1e2acf209d62d22d184488e57"):
 
     path = Path(output_path)
@@ -200,6 +250,7 @@ def __conn_resful(session: requests.Session, url: str, app_id:str="9366197433924
             print(e)
             print(f"Waiting Connection (Sleep 10 secs), please check your network ({datetime.now().strftime('%d %m %Y %H:%M:%S')})")
             time.sleep(10)
+        time.sleep(1.5)
 
 def __conn_resful_showmany(session: requests.Session, url: str, data: dict, app_id:str="936619743392459"):
     print(data)
@@ -246,11 +297,11 @@ def __payload_to_query(playload: dict) -> str:
         q += f"{key}={playload[key]}&"
     return q[0: len(q)-1]
     
-def conn_restful_follower_api(user: User, username: str, user_id:str=None, playload: dict=None, output_path: str=f"{File.get_file_dir()}/output"):
+def conn_restful_follower_api(user: User, cache_login: bool, username: str, user_id:str=None, playload: dict=None, output_path: str=f"{File.get_file_dir()}/output"):
     
     path = Path(output_path)
     
-    use_login(user)
+    use_login(user, load_cache=cache_login)
     
     if user_id is None:
         target_user = user.get_target_user(username)
@@ -278,15 +329,15 @@ def conn_restful_follower_api(user: User, username: str, user_id:str=None, playl
         if next_max_id is not None:
             playload["max_id"] = next_max_id
             print(f"{len(data)} found, has next: True")
-            conn_restful_follower_api(user, username, user_id, playload, output_path)
+            conn_restful_follower_api(user, cache_login, username, user_id, playload, output_path)
         else:
             print(f"{len(data)} found, has next: False")
             
-def conn_restful_following_api(user: User, username: str, user_id:str=None, playload: dict=None, output_path: str=f"{File.get_file_dir()}/output"):
+def conn_restful_following_api(user: User, cache_login: bool, username: str, user_id:str=None, playload: dict=None, output_path: str=f"{File.get_file_dir()}/output"):
     
     path = Path(output_path)
     
-    use_login(user)
+    use_login(user, load_cache=cache_login)
     
     if user_id is None:
         target_user = user.get_target_user(username)
@@ -315,7 +366,7 @@ def conn_restful_following_api(user: User, username: str, user_id:str=None, play
         if next_max_id is not None:
             print(f"{len(data)} found, has next: True")
             playload["max_id"] = next_max_id
-            conn_restful_following_api(user, username, user_id, playload, output_path)
+            conn_restful_following_api(user, cache_login, username, user_id, playload, output_path)
         else:
             print(f"{len(data)} found, has next: False")
 
@@ -389,7 +440,7 @@ def __conn_friendship(friendship_func, user: User, data_file: str, if_err_count_
                     user = user.rebuild()
                     print("Session Clear")
                     __logging("Session Clear and Refesh", log_path)
-                    time.sleep(60*60*1) # sleep 1 hours
+                    time.sleep(60*60*5) # sleep 1 hours
                 
         except Exception as e:
             print("Response Decode Failed")

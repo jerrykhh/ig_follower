@@ -6,8 +6,12 @@ from requests import Session
 from ig.edge import PostEdge
 from ig.exception import UserLoginChallengeFailed, SpamDetectedException, SelectContactPointRecoveryFormException
 from datetime import datetime
+from pathlib import Path
 from typing import Tuple
 import re
+import pickle
+
+SESSION_CACHE_FILE = f"{Path(__file__).parent.absolute()}/.cache/session.pickle"
 
 class __USER:
     
@@ -148,7 +152,7 @@ class User(__USER):
         
         self.two_factore_info = None
         self.user_agent = user_agent
-        self.refesh_csrftoken()
+        # self.refesh_csrftoken()
         self.is_login = False
         self.is_logout = False
     
@@ -179,6 +183,7 @@ class User(__USER):
         return User(username=self.username, password=self.password, user_agent=self.user_agent)
         
     def login(self):
+        self.refesh_csrftoken()
         time = int(datetime.now().timestamp())
         res = self.session.post('https://www.instagram.com/accounts/login/ajax/', 
                           data={
@@ -203,6 +208,7 @@ class User(__USER):
                         'x-csrftoken': self.session.cookies['csrftoken']
                     })
                     self.is_login = True
+                self.save_cache_session()
             else:
                 # print(res_data)
                 # {'message': '', 'two_factor_required': True, 'two_factor_info': {'pk': 4261114159, 'username': 'photo.khh', 'sms_two_factor_on': False, 'whatsapp_two_factor_on': False, 'totp_two_factor_on': True, 'eligible_for_multiple_totp': True, 'obfuscated_phone_number': '2428', 'two_factor_identifier': 'KJnUvq45y8MFr7OWt7GYBduM8SGAJocmoDtlHOgLrLmjg3hbjinMMBHeC5Z42EDw', 'show_messenger_code_option': False, 'show_new_login_screen': True, 'show_trusted_device_option': False, 'should_opt_in_trusted_device_option': True, 'pending_trusted_notification': False, 'sms_not_allowed_reason': None, 'trusted_notification_polling_nonce': None, 'is_trusted_device': False, 'phone_verification_settings': {'max_sms_count': 2, 'resend_sms_delay_sec': 60, 'robocall_count_down_time_sec': 30, 'robocall_after_max_sms': True}}, 'phone_verification_settings': {'max_sms_count': 2, 'resend_sms_delay_sec': 60, 'robocall_count_down_time_sec': 30, 'robocall_after_max_sms': True}, 'status': 'fail', 'error_type': 'two_factor_required'}
@@ -217,10 +223,13 @@ class User(__USER):
                 if "two_factor_required" in res_data and res_data['two_factor_required']:
                     self.two_factore_info = res_data['two_factor_info']
                     two_factor = True
+                    self.save_cache_session()
                 
                 
         except ValueError as e:
             raise e
+        
+        
         
         return two_factor, self.is_login
     
@@ -292,31 +301,40 @@ class User(__USER):
     # def __del__(self):
     #     try:
     #         if not self.is_logout:
-            
-    #             if not self.logout():
-    #                 print("Logout failed")
-    #             else:
-    #                 print("Logout successful")
+    #             self.logout()
     #     except:
     #         pass
-        
-            
+    
+    def save_cache_session(self):
+        cache_file = Path(SESSION_CACHE_FILE)
+        if not cache_file.exists():
+            cache_file.parent.mkdir(parents=True)
+        with open(f"{SESSION_CACHE_FILE}", 'wb+') as f:
+            pickle.dump(self.session, f)
+    
+    def __remove_cache_session(self):
+        Path(SESSION_CACHE_FILE).unlink()    
+    
     def logout(self) -> bool:
-        res = self.session.post('https://www.instagram.com/accounts/logout/ajax/',
-                                data={
-                                    'one_tap_app_login': 0,
-                                    'user_id': self.session.cookies['ds_user_id']
-                                },
-                                headers={
-                                    'x-csrftoken': self.session.cookies['csrftoken'],
-                                    'content-type': 'application/x-www-form-urlencoded',
-                                    'referer': 'https://www.instagram.com/accounts/onetap/?next=%2F'
-                                }, timeout=5)
+        try:
+            res = self.session.post('https://www.instagram.com/accounts/logout/ajax/',
+                                    data={
+                                        'one_tap_app_login': 0,
+                                        'user_id': self.session.cookies['ds_user_id']
+                                    },
+                                    headers={
+                                        'x-csrftoken': self.session.cookies['csrftoken'],
+                                        'content-type': 'application/x-www-form-urlencoded',
+                                        'referer': 'https://www.instagram.com/accounts/onetap/?next=%2F'
+                                    }, timeout=5)
 
-        if json.loads(res.content)['status'] == 'ok':
-            self.is_logout = True
-            self.is_login = False
-            return True
+            if json.loads(res.content)['status'] == 'ok':
+                self.is_logout = True
+                self.is_login = False
+                return True
+        except:
+            pass
+        self.__remove_cache_session()
         return False
     
     def __chk_login(self):

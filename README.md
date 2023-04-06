@@ -32,6 +32,8 @@ pip install -r requirements.txt
 --output              Output Directory (optional)
 --sleep               Sleep time for each request (optional, default 5 seconds) (optional)
 --user_agent          Please enter your common User Agent
+--cache_login CACHE_LOGIN
+                        It will create the .cache folder after login for reduce the login times (1: True)
 ```
 
 ## Get user follower to CSV
@@ -56,6 +58,8 @@ python ig_following2csv.py --username "your_username" \
 ```
 
 ## Get Post liked user to CSV file
+> Instagram is changed it to Server Side Rendering (SSR). Please also install the requests-html package/
+
 ```
 -h, --help            show this help message and exit
 --username            Instagram Username
@@ -75,6 +79,8 @@ python ig_postliked2csv.py --username "your_username" \
     --user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36"
 ```
 \* You can find the post short code in the post of user profile page
+![Image](./resource//postlike2csv_shortcode.png)
+**postliked2csv function only can fetch ~99 users due to the Instagram API only show top 99 user. You can check your Mobile App it also can show ~99 users**
 
 ## Combine the CSV file
 ```
@@ -139,3 +145,4 @@ It cannot fetching user information many time when the user is not login, it wil
 ## Known Limitation
 1. if the number of requests >= 200 will print "rate limited" for get the user data to csv file, due to Instagram limited -> Solve: Change the IP address (such as VPN)
 2. If your password contain "!" and the Terminal is throw "zsh: parse error near `)'" please use single quota ('') For example: "abcdeGF!" -> 'abcdeGF!'
+3. postliked2csv only can fetch ~99 users due to the Instagram API only show top 99 user
