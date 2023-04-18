@@ -6,6 +6,103 @@ import csv
 import os
 from pathlib import Path
 import pandas as pd
+import queue
+import time
+import threading
+import asyncio
+import aiohttp
+import aiofiles
+from uuid import uuid4
+
+class FetchImageFile:
+    
+    def __init__(self, url: str, output_path: str, extension: str=".jpg", id:str=None) -> None:
+        self.id = id if id is not None else uuid4().hex
+        self.url = url
+        if output_path[-1] != "/":
+            output_path += "/"
+        self.output_path = output_path + self.id + extension
+
+
+class ImageFileSaveQueue:
+    
+    _instance = None
+    
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = cls.__new__(cls)
+            cls._instance.__init__()
+        return cls._instance
+    
+    def __init__(self, sleep_time:int = 2) -> None:
+        self.queue = queue.Queue()
+        self.sleep_time = sleep_time
+        self.lock = threading.Lock()
+    
+    async def async_save_image(self, image: FetchImageFile):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(image.url) as res:
+                
+                if res.status == 200:
+                    content = await res.read()
+                    async with aiofiles.open(image.output_path, "wb") as f:
+                        await f.write(content)
+                        print(image.id, "saved")
+                else:
+                    print("Download failed:", image.url)
+                
+    
+    async def async_save_images(self, coroutines):
+        await asyncio.gather(*coroutines, return_exceptions=True)
+    
+    def __start(self):
+        
+        while True:
+            
+            self.lock.acquire()
+            size = self.queue.qsize()
+            print('size', size)
+            exit = False
+            if size > 0:
+                img_reqs = []
+                
+                for _ in range(0, size):
+                    
+                    item = self.queue.get()
+                    if item is not None:
+                        img_reqs.append(item)
+                    else:
+                        exit = True
+                
+                self.lock.release()
+                
+                with self.queue.mutex:
+                    self.queue.queue.clear()
+                
+                coroutines = [
+                    self.async_save_image(image=image_file)
+                    for image_file in img_reqs
+                ]
+                
+                asyncio.run(self.async_save_images(coroutines))
+            else:
+                self.lock.release()
+            
+            
+            if self.queue.qsize() == 0 and exit:
+                break
+            time.sleep(self.sleep_time)
+    
+    def start(self):
+        threading.Thread(target=self.__start).start()
+        
+    def put(self, item) -> None:
+        self.lock.acquire()
+        self.queue.put(item) 
+        self.lock.release()
+    
+    
 
 class File:
     
@@ -14,6 +111,10 @@ class File:
         p = Path(path)
         p.touch()
         return p
+    
+    @staticmethod
+    def mkdir(path: str):
+        Path(path).mkdir()
     
     @staticmethod
     def get_file_dir():

@@ -1,11 +1,13 @@
-import asyncio
+
 from concurrent.futures import ThreadPoolExecutor, wait
-import threading
 from ig.file import File, CSVRead
+from ig.feed import Feed
 from ig.user import TargetUser, User, GeneralUser, SESSION_CACHE_FILE
+from ig.exception import UserLoginFailedException, RequestRateLimitedException, RequestOverException
+from ig.file import ImageFileSaveQueue
 from pathlib import Path
 from datetime import datetime
-from ig.exception import UserLoginFailedException, RequestRateLimitedException, RequestOverException
+from requests_html import HTMLSession
 import pandas as pd
 import requests
 import json
@@ -13,7 +15,7 @@ import sys
 import time
 import re
 import pickle
-from requests_html import HTMLSession
+import threading
 
 GRAPHQL_QUERY_ENDPOINT = "https://www.instagram.com/graphql/query/"
 RESFUL_API_ENPOINT = "https://i.instagram.com/api/v1/"
@@ -33,7 +35,7 @@ def use_login(user: User, load_cache:bool=True):
         except Exception as e:
             print("Load .cache failed" + str(e))
             user.is_login = False
-        print("test")
+            
         two_factor, logined = user.login()
         
         if two_factor:
@@ -450,13 +452,55 @@ def __conn_friendship(friendship_func, user: User, data_file: str, if_err_count_
     print(f"Task Finish, total: {len(df)} rows")
     __logging(f"Task Finish, total: {len(df)} rows", log_path)
     
+def conn_restful_user_media(user: User, target_username:str, playload:dict=None, sleep:int=0, output_path: str=f"{File.get_file_dir()}/output", i:int=0, have_next: bool = False):
+    
+    use_login(user)
+    
+    if i == 0:
+        if output_path[-1] != "/":
+            output_path += "/"
+        output_path += target_username
+        File.mkdir(f"{output_path}")
+    
+    if playload is None:
+        playload = {
+            "count": 30
+        }
+    
+    q = __payload_to_query(playload)
+    res = __conn_resful(user.session, url=f"{RESFUL_API_ENPOINT}feed/user/{target_username}/username/?{q}")    
+    
+    # print(res)
+    try:
+        if res is not None:
+            
+            feed = Feed(**res)
+            feed.save_all_media(output_path)
+            print("save all tr")
+                
+            if res["more_available"]:
+                playload["max_id"] = res["next_max_id"]
+                time.sleep(sleep)
+                i+=1
+                conn_restful_user_media(user, target_username, playload, output_path, i=i)
+            else:
+                print(f"{target_username} Fetch End")
+                if not have_next:
+                    ImageFileSaveQueue.get_instance().put(None)
+            
+        else:
+            raise Exception("Fetching data error,", res)
+            
+    except Exception as e:
+        print(e)
+        ImageFileSaveQueue.get_instance().put(None)
+        sys.exit(1)
 
 def use_follow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float=8*60, log_path:str = None):
     __conn_friendship(user.follow, user, data_file, if_err_count_sleep, sleep, log_path)
 
 def use_unfollow(user: User, data_file: str, if_err_count_sleep:int=3, sleep:float=8*60, log_path:str = None):
     __conn_friendship(user.unfollow, user, data_file, if_err_count_sleep, sleep, log_path)
-
 
 lock = threading.Lock()
 

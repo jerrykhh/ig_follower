@@ -2,6 +2,8 @@
 
 > Fetching user follower and user following is changed to Instagram Restful API from GraphQL
 
+> User Post Download func released
+
 ## Description
 It can save the following or follower data based on you is provided Instagram account username (the account must be followed/public account). In addition, the program is able to remove duplicate row or show duplicate only and save to new data file. Moreover, the program can follow the user automatically based on the data file, it will send the follow request to instagram server and for each request can set the customized time interval. User can utilize above method to follow the potential customer for your instagram business promotion/ data analysis.
 \* Now Updated version handled is supported the two factor authentication and login challenge (email)
@@ -15,11 +17,12 @@ If you interesting this project, you can view my demo video in Youtube(Cantonese
 3. Get Instagram Post Liked users to CSV file
 4. Combine the CSV file
 5. Follow the user automatically based on provided csv file
-6. Fetching user details (Testing)
+6. User Post Download
+7. Fetching user details (Testing)
 
 
 ## Installation 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -38,7 +41,7 @@ pip install -r requirements.txt
 
 ## Get user follower to CSV
 
-```
+```bash
 python ig_follower2csv.py --username "your_username" \
     --pwd "your_password" \
     --target "account1" "account2" \
@@ -48,7 +51,7 @@ python ig_follower2csv.py --username "your_username" \
 ```
 
 ## Get user following to CSV
-```
+```bash
 python ig_following2csv.py --username "your_username" \
     --pwd "your_password" \
     --target "account1" "account2" \
@@ -70,7 +73,7 @@ python ig_following2csv.py --username "your_username" \
 --user_agent          Please enter your common User Agent
 ```
 
-```
+```bash
 python ig_postliked2csv.py --username "your_username" \
     --pwd "your_password" \
     --target "short_code_1" "short_code_2" \
@@ -90,7 +93,7 @@ python ig_postliked2csv.py --username "your_username" \
 --output              Saved file path
 ```
 
-```
+```bash
 python ig_csv.py --action "merge&rm_fol"  \
     --files ./output/file1.csv ./output/file2.csv \
     --output ./output/
@@ -113,13 +116,24 @@ python ig_follow.py --username "your_username" \
     --log ./output/test-log.txt
 ```
 ## Unfollow Users based on provided csv file
-```
+```bash
 python ig_unfollow.py --username "your_username" \
     --pwd "your_password" \
     --user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36" \ 
     --data ./output/test-2.csv \
     --log ./output/test-log.txt
 ```
+
+## User Post Download
+This function will download your target user post
+
+```bash
+python ig_img_extract.py --username "your_username" \
+    --pwd "your_password" \
+    --target 'ririlily_' \
+    --user_agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+```
+
 ## Fetching User Details (Testing)
 ```
 -h, --help            show this help message and exit

@@ -39,7 +39,10 @@ class NodeUser(__USER):
         self.id: str = user_inf["id"] if "id" in user_inf else user_inf["pk"]
         self.full_name: str = user_inf["full_name"]
         self.username: str = user_inf["username"]
+        self.is_private: bool = user_inf["is_private"] if "is_private" in user_inf else None
+        self.is_verified: bool = user_inf["is_verified"]  if "is_verified" in user_inf else None
         self.followed_by_viewer: bool = user_inf["followed_by_viewer"] if "followed_by_viewer" in user_inf else None
+        self.profile_pic_id: str = user_inf["profile_pic_id"] if "profile_pic_id" in user_inf else None
         self.profile_pic_url: str = user_inf["profile_pic_url"]
       
     
