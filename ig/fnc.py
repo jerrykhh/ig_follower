@@ -452,37 +452,37 @@ def __conn_friendship(friendship_func, user: User, data_file: str, if_err_count_
     print(f"Task Finish, total: {len(df)} rows")
     __logging(f"Task Finish, total: {len(df)} rows", log_path)
     
-def conn_restful_user_media(user: User, target_username:str, playload:dict=None, sleep:int=0, output_path: str=f"{File.get_file_dir()}/output", i:int=0, have_next: bool = False):
+def conn_restful_user_media(user: User, target_username:str, playload:dict=None, sleep:int=2, output_path: str=f"{File.get_file_dir()}/output", i:int=0, have_next: bool = False):
     
     use_login(user)
-    
+        
     if i == 0:
+        i+=1
         if output_path[-1] != "/":
             output_path += "/"
         output_path += target_username
         File.mkdir(f"{output_path}")
-    
+        
     if playload is None:
         playload = {
             "count": 30
         }
-    
+        
     q = __payload_to_query(playload)
     res = __conn_resful(user.session, url=f"{RESFUL_API_ENPOINT}feed/user/{target_username}/username/?{q}")    
-    
+        
     # print(res)
     try:
         if res is not None:
             
             feed = Feed(**res)
             feed.save_all_media(output_path)
-            print("save all tr")
                 
             if res["more_available"]:
                 playload["max_id"] = res["next_max_id"]
                 time.sleep(sleep)
-                i+=1
-                conn_restful_user_media(user, target_username, playload, output_path, i=i)
+                
+                conn_restful_user_media(user, target_username, playload, sleep=sleep, output_path=output_path, i=i)
             else:
                 print(f"{target_username} Fetch End")
                 if not have_next:

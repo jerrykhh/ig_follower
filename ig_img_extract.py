@@ -9,7 +9,6 @@ def main(args):
     user = User(username=args.username, password=args.pwd, user_agent=args.user_agent)
     try:
         for i, target in enumerate(args.target):
-            print("target", target)
             conn_restful_user_media(user=user, target_username="".join(target), sleep=args.sleep, have_next=not(len(args.target)-1 == i))
             time.sleep(5)
     except ValueError as e:

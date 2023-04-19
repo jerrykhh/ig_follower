@@ -52,7 +52,7 @@ class ImageVersion2:
 
 class VideoVersion:
     
-    def __init__(self, height: int, id: str, type: int, url: str, width: int) -> None:
+    def __init__(self, height: int, id: str, type: int, url: str, width: int, accessibility_caption:str=None) -> None:
         self.height = height
         self.id = id
         self.type = type
@@ -94,7 +94,7 @@ class CarouselMediaItem:
 
 class CarouselPhotoMediaItem(CarouselMediaItem):
     
-    def __init__(self, id: str, media_type: int, product_type: str, image_versions2: dict, original_width: int, original_height: int, accessibility_caption: str, pk: str, carousel_parent_id: str, commerciality_status: str, sharing_friction_info: dict, usertags: dict=None) -> None:        
+    def __init__(self, id: str, media_type: int, product_type: str, image_versions2: dict, original_width: int, original_height: int, pk: str, carousel_parent_id: str, commerciality_status: str, sharing_friction_info: dict, usertags: dict=None, accessibility_caption: str=None) -> None:        
         super().__init__(id, media_type, product_type, image_versions2, original_width, original_height, pk, carousel_parent_id, commerciality_status, sharing_friction_info, usertags)
         self.accessibility_caption = accessibility_caption
 
@@ -105,7 +105,7 @@ class CarouselPhotoMediaItem(CarouselMediaItem):
 
 class CarouselVideoMediaItem(CarouselMediaItem):
     
-    def __init__(self, id: str, media_type: int, product_type: str, image_versions2: dict, original_width: int, original_height: int, pk: str, carousel_parent_id: str, commerciality_status: str, sharing_friction_info: dict, video_versions, is_dash_eligible:int=None, video_dash_manifest:str=None, video_codec:str=None, video_duration:float=None, number_of_qualities:int=None, has_audio:bool=None, usertags: dict=None) -> None:
+    def __init__(self, id: str, media_type: int, product_type: str, image_versions2: dict, original_width: int, original_height: int, pk: str, carousel_parent_id: str, commerciality_status: str, sharing_friction_info: dict, video_versions, is_dash_eligible:int=None, video_dash_manifest:str=None, video_codec:str=None, video_duration:float=None, number_of_qualities:int=None, has_audio:bool=None, usertags: dict=None, accessibility_caption:str=None) -> None:
         super().__init__(id, media_type, product_type, image_versions2, original_width, original_height, pk, carousel_parent_id, commerciality_status, sharing_friction_info, usertags)
         self.video_versions: list[VideoVersion] = [VideoVersion(**item) for item in video_versions]
         self.video_duration: float = video_duration
