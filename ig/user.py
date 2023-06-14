@@ -196,8 +196,10 @@ class User(__USER):
                                 'optIntoOneTap': 'false'
                             }, headers={
                             "X-Requested-With": "XMLHttpRequest",
-                            "Referer": "https://www.instagram.com/accounts/login/"
-                        }, timeout=5)
+                            "Referer": "https://www.instagram.com/accounts/login/",
+                            "X-Ig-App-Id": "936619743392459",
+                            "X-Instagram-Ajax": "1007679196"
+                        }, timeout=10)
 
         two_factor = False
         
@@ -290,7 +292,7 @@ class User(__USER):
                                         'trust_signal': True,
                                         'username': self.username,
                                         'verificationCode': verify_code
-                                    }, timeout=5)
+                                    }, timeout=10)
             # {'authenticated': True, 'userId': '4261114159', 'oneTapPrompt': True, 'status': 'ok'}
             res_data = json.loads(res.text)
             if str(res_data['status']).lower() != 'ok':
@@ -329,7 +331,7 @@ class User(__USER):
                                         'x-csrftoken': self.session.cookies['csrftoken'],
                                         'content-type': 'application/x-www-form-urlencoded',
                                         'referer': 'https://www.instagram.com/accounts/onetap/?next=%2F'
-                                    }, timeout=5)
+                                    }, timeout=10)
 
             if json.loads(res.content)['status'] == 'ok':
                 self.is_logout = True

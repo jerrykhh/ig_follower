@@ -56,7 +56,7 @@ def __conn_grahql(session: requests.Session, url: str ) -> json or None:
     over_count = 0
     while True:
         try:
-            res = session.get(url, timeout=5)
+            res = session.get(url, timeout=10)
             json_data = json.loads(res.content)
             if bool(json_data) and json_data["status"] == "ok" :
                 return json_data["data"]
@@ -238,7 +238,7 @@ def conn_graphql_following_edge(user: User, username: str, user_id:str=None, pla
 def __conn_resful(session: requests.Session, url: str, app_id:str="936619743392459") -> json or None:
     while True:
         try:
-            res = session.get(url, timeout=5, headers={"x-ig-app-id": app_id})
+            res = session.get(url, timeout=10, headers={"x-ig-app-id": app_id})
             json_data = json.loads(res.content)
             if bool(json_data) and json_data["status"] == "ok" :
                 return json_data
@@ -259,7 +259,7 @@ def __conn_resful_showmany(session: requests.Session, url: str, data: dict, app_
     
     while True:
         try:
-            res = session.post(url, timeout=5, data=data, headers={
+            res = session.post(url, timeout=10, data=data, headers={
                 "content-type": "application/x-www-form-urlencoded",
                 "x-ig-app-id": app_id})
             # print(res)
